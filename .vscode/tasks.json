@@ -1,0 +1,21 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "build-release",
+      "command": "dotnet",
+      "args": ["build", "${workspaceFolder}/TerraMind-Core.sln", "-c", "Release"],
+      "type": "process",
+      "problemMatcher": "$msCompile",
+      "presentation": { "reveal": "always", "panel": "new" }
+    },
+    {
+      "label": "run-demo",
+      "command": "dotnet",
+      "args": ["${workspaceFolder}/src/TerraMind.App/bin/Release/net8.0/TerraMind.App.dll", "--ticks", "90"],
+      "type": "process",
+      "dependsOn": ["build-release"],
+      "presentation": { "reveal": "always", "panel": "new" }
+    }
+  ]
+}

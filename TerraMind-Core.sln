@@ -1,0 +1,64 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{6BA49968-132D-4683-9D08-0FDD5B726472}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TerraMind.State", "src\TerraMind.State\TerraMind.State.csproj", "{8C4727B3-106B-4485-8143-CC865EB3CC1A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TerraMind.Memory", "src\TerraMind.Memory\TerraMind.Memory.csproj", "{E3EDD374-B34F-4600-8AB2-1AE4904BA786}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TerraMind.Brain", "src\TerraMind.Brain\TerraMind.Brain.csproj", "{F2DBFBB7-482D-41DA-AA77-F3A8912704AF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TerraMind.Input", "src\TerraMind.Input\TerraMind.Input.csproj", "{F15CC433-48B6-4F1C-9987-741BCB6AEB2B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TerraMind.App", "src\TerraMind.App\TerraMind.App.csproj", "{02740D13-4462-4CF7-AF56-6CE778DDAE6C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "mods", "mods", "{7366F4F9-2DA3-4A0C-8BFD-C35CF37E785D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TerraMind.TModPort", "mods\TerraMind.TModPort\TerraMind.TModPort.csproj", "{B6DE321A-59F9-41CC-9371-17B7A9201D75}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8C4727B3-106B-4485-8143-CC865EB3CC1A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8C4727B3-106B-4485-8143-CC865EB3CC1A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8C4727B3-106B-4485-8143-CC865EB3CC1A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8C4727B3-106B-4485-8143-CC865EB3CC1A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E3EDD374-B34F-4600-8AB2-1AE4904BA786}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E3EDD374-B34F-4600-8AB2-1AE4904BA786}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E3EDD374-B34F-4600-8AB2-1AE4904BA786}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E3EDD374-B34F-4600-8AB2-1AE4904BA786}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F2DBFBB7-482D-41DA-AA77-F3A8912704AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F2DBFBB7-482D-41DA-AA77-F3A8912704AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F2DBFBB7-482D-41DA-AA77-F3A8912704AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F2DBFBB7-482D-41DA-AA77-F3A8912704AF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F15CC433-48B6-4F1C-9987-741BCB6AEB2B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F15CC433-48B6-4F1C-9987-741BCB6AEB2B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F15CC433-48B6-4F1C-9987-741BCB6AEB2B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F15CC433-48B6-4F1C-9987-741BCB6AEB2B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{02740D13-4462-4CF7-AF56-6CE778DDAE6C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{02740D13-4462-4CF7-AF56-6CE778DDAE6C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{02740D13-4462-4CF7-AF56-6CE778DDAE6C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{02740D13-4462-4CF7-AF56-6CE778DDAE6C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B6DE321A-59F9-41CC-9371-17B7A9201D75}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B6DE321A-59F9-41CC-9371-17B7A9201D75}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B6DE321A-59F9-41CC-9371-17B7A9201D75}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B6DE321A-59F9-41CC-9371-17B7A9201D75}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{8C4727B3-106B-4485-8143-CC865EB3CC1A} = {6BA49968-132D-4683-9D08-0FDD5B726472}
+		{E3EDD374-B34F-4600-8AB2-1AE4904BA786} = {6BA49968-132D-4683-9D08-0FDD5B726472}
+		{F2DBFBB7-482D-41DA-AA77-F3A8912704AF} = {6BA49968-132D-4683-9D08-0FDD5B726472}
+		{F15CC433-48B6-4F1C-9987-741BCB6AEB2B} = {6BA49968-132D-4683-9D08-0FDD5B726472}
+		{02740D13-4462-4CF7-AF56-6CE778DDAE6C} = {6BA49968-132D-4683-9D08-0FDD5B726472}
+		{B6DE321A-59F9-41CC-9371-17B7A9201D75} = {7366F4F9-2DA3-4A0C-8BFD-C35CF37E785D}
+	EndGlobalSection
+EndGlobal
