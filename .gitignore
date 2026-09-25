@@ -425,6 +425,12 @@ test-results/
 # Mac bundle stuff
 *.dmg
 *.app
+# ...pero src/TerraMind.App es NUESTRO proyecto (no un bundle macOS)
+!src/TerraMind.App/
+!src/TerraMind.App/**
+# ...y sus bin/obj siguen ignorados como en el resto de proyectos
+src/TerraMind.App/[Bb]in/
+src/TerraMind.App/[Oo]bj/
 
 # content below from: https://github.com/github/gitignore/blob/master/Global/macOS.gitignore
 # General

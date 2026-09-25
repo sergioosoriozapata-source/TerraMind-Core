@@ -36,6 +36,7 @@ public sealed class InputActuator
     private static ushort VkDigit(int slot0to9) => (ushort)(slot0to9 == 9 ? 0x30 : 0x31 + slot0to9);
 
     private readonly HashSet<ushort> _down = new();
+    private bool _mouseDown;
     public bool DryRun { get; set; } = true;
     public bool Verbose { get; set; } = true;
 
@@ -49,14 +50,35 @@ public sealed class InputActuator
         return SendInput(1, new[] { inp }, Marshal.SizeOf<INPUT>());
     }
 
+    public static uint SendMouse(bool down)
+    {
+        var inp = new INPUT { type = INPUT_MOUSE, u = new InputUnion { mi = new MOUSEINPUT { dx = 0, dy = 0, mouseData = 0, dwFlags = down ? MOUSEEVENTF_LEFTDOWN : MOUSEEVENTF_LEFTUP, time = 0, dwExtraInfo = IntPtr.Zero } } };
+        return SendInput(1, new[] { inp }, Marshal.SizeOf<INPUT>());
+    }
+
     public static uint SendMouseClick()
     {
-        var down = new INPUT { type = INPUT_MOUSE, u = new InputUnion { mi = new MOUSEINPUT { dx = 0, dy = 0, mouseData = 0, dwFlags = MOUSEEVENTF_LEFTDOWN, time = 0, dwExtraInfo = IntPtr.Zero } } };
-        var up = new INPUT { type = INPUT_MOUSE, u = new InputUnion { mi = new MOUSEINPUT { dx = 0, dy = 0, mouseData = 0, dwFlags = MOUSEEVENTF_LEFTUP, time = 0, dwExtraInfo = IntPtr.Zero } } };
-        uint r1 = SendInput(1, new[] { down }, Marshal.SizeOf<INPUT>());
+        uint r1 = SendMouse(true);
         Thread.Sleep(80);
-        uint r2 = SendInput(1, new[] { up }, Marshal.SizeOf<INPUT>());
+        uint r2 = SendMouse(false);
         return r1 + r2 == 2 ? 2u : 0u;
+    }
+
+    // Mantiene click izquierdo para armas auto (espadas/arcos) y deja pulsos a AttackPulse para latigos.
+    public void AttackHold(bool want)
+    {
+        if (want == _mouseDown) return;
+        if (DryRun) { _mouseDown = want; return; }
+        uint r = SendMouse(want);
+        if (Verbose) Console.WriteLine($"[Mouse] {(want ? "DOWN" : "UP")} ret={r}");
+        if (r == 1) _mouseDown = want;
+    }
+
+    // Pulso extra para latigos (casi todos no tienen auto-reuse): 1 click rapido.
+    public void AttackPulse()
+    {
+        if (DryRun) { if (Verbose) Console.WriteLine("[Whip pulse DryRun]"); return; }
+        SendMouseClick();
     }
 
     public static int InputSize() => Marshal.SizeOf<INPUT>();
@@ -123,5 +145,6 @@ public sealed class InputActuator
     {
         foreach (var vk in _down.ToArray()) SetKey(vk, false);
         _down.Clear();
+        AttackHold(false);
     }
 }

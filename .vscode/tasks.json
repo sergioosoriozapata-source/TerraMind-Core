@@ -11,8 +11,24 @@
     },
     {
       "label": "run-demo",
-      "command": "dotnet",
-      "args": ["${workspaceFolder}/src/TerraMind.App/bin/Release/net8.0/TerraMind.App.dll", "--ticks", "90"],
+      "command": "${workspaceFolder}/src/TerraMind.App/bin/Release/net8.0/TerraMind.App.exe",
+      "args": ["--ticks", "90"],
+      "type": "process",
+      "dependsOn": ["build-release"],
+      "presentation": { "reveal": "always", "panel": "new" }
+    },
+    {
+      "label": "run-scan",
+      "command": "${workspaceFolder}/src/TerraMind.App/bin/Release/net8.0/TerraMind.App.exe",
+      "args": ["--scan", "--slots", "1,4"],
+      "type": "process",
+      "dependsOn": ["build-release"],
+      "presentation": { "reveal": "always", "panel": "new" }
+    },
+    {
+      "label": "run-farm",
+      "command": "${workspaceFolder}/src/TerraMind.App/bin/Release/net8.0/TerraMind.App.exe",
+      "args": ["--farm", "--minutes", "5"],
       "type": "process",
       "dependsOn": ["build-release"],
       "presentation": { "reveal": "always", "panel": "new" }
