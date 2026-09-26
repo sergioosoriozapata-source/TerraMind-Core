@@ -13,11 +13,11 @@ Solo single-player offline. Sin Cheat Engine: lee el heap .NET por nombres (ClrM
 ## Uso (App es x86: ejecuta el `.exe`, no `dotnet dll`)
 1. Steam Offline, backup `Documents/My Games/Terraria/`.
 2. `dotnet build TerraMind-Core.sln -c Release`
-3. Ver estado + estrategia (no toca el juego salvo leer): `run-scan.cmd`
-   (`TerraMind.App.exe --scan --slots 1,4`)
-4. Farmear solo 5 min: `run-farm.cmd` (`--farm --minutes 5`)
-5. Cazar Skeletron (noche + dungeon, tú activas al anciano): `run-hunt.cmd` (`--hunt Skeletron --minutes 15`)
-6. Invocar súbditos: `run-summoner.cmd`. Mover: `run-demo.cmd`. Live libre: `run-live.cmd`.
+3. Solo 3 runs:
+   * `run-prehardmode.cmd` → estrategia + farmeo/jefes FASE 1 (7 jefes hasta el Muro), 10 min
+   * `run-hardmode.cmd` → estrategia + farmeo/jefes FASE 2 (10 jefes hasta Moon Lord), 15 min
+   * `run-empress.cmd` → caza Emperatriz DIURNA (furiosa one-shot, solo esquiva + súbditos), 15 min
+   Mundo abierto, sin pausa. `Ctrl+C` para parar.
 
 ## Seguridad
 Solo lectura (`PROCESS_VM_READ` + ClrMD attach). Si corrupción: Steam > Terraria > Propiedades > Archivos instalados > Verificar integridad.

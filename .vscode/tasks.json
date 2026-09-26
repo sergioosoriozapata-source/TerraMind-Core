@@ -10,25 +10,25 @@
       "presentation": { "reveal": "always", "panel": "new" }
     },
     {
-      "label": "run-demo",
+      "label": "run-prehardmode",
       "command": "${workspaceFolder}/src/TerraMind.App/bin/Release/net8.0/TerraMind.App.exe",
-      "args": ["--ticks", "90"],
+      "args": ["--farm", "--minutes", "10"],
       "type": "process",
       "dependsOn": ["build-release"],
       "presentation": { "reveal": "always", "panel": "new" }
     },
     {
-      "label": "run-scan",
+      "label": "run-hardmode",
       "command": "${workspaceFolder}/src/TerraMind.App/bin/Release/net8.0/TerraMind.App.exe",
-      "args": ["--scan", "--slots", "1,4"],
+      "args": ["--farm", "--minutes", "15"],
       "type": "process",
       "dependsOn": ["build-release"],
       "presentation": { "reveal": "always", "panel": "new" }
     },
     {
-      "label": "run-farm",
+      "label": "run-empress",
       "command": "${workspaceFolder}/src/TerraMind.App/bin/Release/net8.0/TerraMind.App.exe",
-      "args": ["--farm", "--minutes", "5"],
+      "args": ["--hunt", "EmpressOfLight", "--minutes", "15"],
       "type": "process",
       "dependsOn": ["build-release"],
       "presentation": { "reveal": "always", "panel": "new" }
