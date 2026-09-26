@@ -66,6 +66,10 @@ if (scan)
     var inv = snap.Inventory.Where(s => !s.IsEmpty).Take(20).ToArray();
     Console.WriteLine($"  inv no vacios: {snap.Inventory.Count(s => !s.IsEmpty)} (top: {string.Join(" | ", inv.Select(s => $"{s.Index + 1}:{s.Role}"))})");
     Console.WriteLine($"  jefes activos: {(snap.ActiveBosses.Length == 0 ? "ninguno" : string.Join(";", snap.ActiveBosses.Select(b => $"{b.Name} {b.Life}/{b.MaxLife}")))}");
+    Console.WriteLine($"  proyectiles hostiles: {snap.LiveProjectiles.Length}{(snap.LiveProjectiles.Length > 0 ? " (top: " + string.Join(";", snap.LiveProjectiles.Take(5).Select(p => $"t{p.Type} d{p.Damage} v({p.VelocityX:F1},{p.VelocityY:F1})")) + ")" : "")}");
+    Console.WriteLine($"  {PhasePlan.Summary(snap.Downed)}");
+    var opt = PhasePlan.PendingOptional(PhasePlan.PreHardmode.Concat(PhasePlan.Hardmode).ToArray(), snap.Downed);
+    if (opt.Length > 0) Console.WriteLine($"  opcionales pendientes: {string.Join(",", opt)}");
     if (snap.Warnings.Count > 0) { Console.WriteLine($"  warnings({snap.Warnings.Count}):"); foreach (var x in snap.Warnings.Take(15)) Console.WriteLine($"    - {x}"); }
 
     var strat = StrategyBuilder.Build(snap, saves.ActivePlayer ?? "?", saves.ActiveWorld ?? "?", userSlots);
@@ -246,10 +250,18 @@ bool HasBuff(LiveSnapshot s, ClrMdGameReader reader, string buffInternalName)
 LiveSnapshot FakeFarmTick(SimulatedWorld sim, int tick)
 {
     var st = sim.State;
+    bool boss = tick is >= 100 and <= 160;
+    var projs = boss
+        ? new[]
+        {
+            new ProjectileState { Type = 1, PositionX = st.PositionX + 100, PositionY = st.PositionY, VelocityX = -6, VelocityY = 0, Damage = 20, Hostile = true, Active = true },
+            new ProjectileState { Type = 2, PositionX = st.PositionX + 120, PositionY = st.PositionY - 30, VelocityX = -7, VelocityY = 1, Damage = 25, Hostile = true, Active = true },
+        }
+        : Array.Empty<ProjectileState>();
     return new LiveSnapshot(false, "simulado", 0, DateTime.Now, 400, 400, 200, 200,
         21, st.PositionX, st.PositionY, 0, 0, 180, 180, 1, 2, 0,
         new ItemSlot[] { new(0, 1, 1, "ThornWhipx1[LATIGO]"), new(3, 2, 1, "FlinxStaffx1[BACULO]") }, Array.Empty<ItemSlot>(), Array.Empty<int>(),
-        true, 27000, "?", "?", new Dictionary<string, bool>(), tick is >= 30 and <= 60 ? new[] { new BossState { Type = 4, Name = "EyeofCthulhu", Life = 2000, MaxLife = 2800, Active = true } } : Array.Empty<BossState>(), new List<string>());
+        true, 27000, "?", "?", new Dictionary<string, bool>(), boss ? new[] { new BossState { Type = 4, Name = "EyeofCthulhu", Life = 2000, MaxLife = 2800, Active = true } } : Array.Empty<BossState>(), projs, new List<string>());
 }
 if (farm || hunt)
 {
@@ -275,7 +287,7 @@ if (farm || hunt)
     Console.WriteLine($"[Farm] attach: {okC} | {clr2.LastError}");
     if (!isDry && !okC) { Console.WriteLine("[Farm] Sin juego. Usa --dry para simular."); return; }
 
-    var snap0 = isDry ? new LiveSnapshot(false, "simulado", 0, DateTime.Now, 400, 400, 200, 200, 21, 0, 0, 0, 0, 180, 180, 0, 2, 0, new ItemSlot[] { new(0, 1, 1, "ThornWhipx1[LATIGO]"), new(3, 2, 1, "FlinxStaffx1[BACULO]") }, Array.Empty<ItemSlot>(), Array.Empty<int>(), true, 27000, "?", "?", new Dictionary<string, bool>(), Array.Empty<BossState>(), new List<string>())
+    var snap0 = isDry ? new LiveSnapshot(false, "simulado", 0, DateTime.Now, 400, 400, 200, 200, 21, 0, 0, 0, 0, 180, 180, 0, 2, 0, new ItemSlot[] { new(0, 1, 1, "ThornWhipx1[LATIGO]"), new(3, 2, 1, "FlinxStaffx1[BACULO]") }, Array.Empty<ItemSlot>(), Array.Empty<int>(), true, 27000, "?", "?", new Dictionary<string, bool>(), Array.Empty<BossState>(), Array.Empty<ProjectileState>(), new List<string>())
         : clr2.Scan();
     var strat0 = StrategyBuilder.Build(snap0, "?", "?", userSlotsOf(args));
     var arche = strat0.SuggestedClass;
@@ -287,6 +299,7 @@ if (farm || hunt)
         _ => new ClassProfile(Archetype.Ranged, 300, 450, ""),
     };
     Console.WriteLine($"[Farm] clase={arche} ({strat0.Reason}) | etapa={strat0.Stage} | siguiente={strat0.NextGoal}");
+    Console.WriteLine($"[Farm] {PhasePlan.Summary(snap0.Downed)}");
     int[] staffSlots = strat0.SuggestedSummonSlots.Select(s => s - 1).Where(s => s is >= 0 and <= 9).ToArray();
     int[] bossSlotsAuto = strat0.SuggestedBossSlots.Select(s => s - 1).Where(s => s is >= 0 and <= 9).ToArray();
     int weaponSlot = snap0.Hotbar.FirstOrDefault(s => s.Role.Contains("LATIGO")) is ItemSlot w1 && !w1.IsEmpty ? w1.Index
@@ -328,7 +341,7 @@ if (farm || hunt)
                 MaxRunSpeed = 11.5f, PositionX = s.PosX ?? 0, PositionY = s.PosY ?? 0,
                 VelocityX = s.VelX ?? 0, VelocityY = s.VelY ?? 0,
             };
-            var decision = brain.Tick(p, s.ActiveBosses, Array.Empty<ProjectileState>(), profile);
+            var decision = brain.Tick(p, s.ActiveBosses, s.LiveProjectiles, profile);
             var act = GameAction.FromDecision(decision with { UseHealPotion = decision.UseHealPotion && !potionSick });
 
             if (!isDry)
@@ -356,9 +369,9 @@ if (farm || hunt)
                 if (s.ActiveBosses.Length > 0) bossSeen = true;
                 if (!bossSeen && !isDry && target.CanAttempt(beater2.Progress.Stage, clock) && s.ActiveBosses.Length == 0)
                 {
-                    if (target.Boss == "Skeletron")
+                    if (target.NeedsWorldTrigger)
                     {
-                        if (tick % 300 == 0) Console.WriteLine("[Hunt] Skeletron se invoca hablando con el anciano del dungeon (click derecho + Maldicion). Hazlo tu y yo peleo. Esperando jefe...");
+                        if (tick % 300 == 0) Console.WriteLine($"[Hunt] {target.Boss}: {target.ItemName} ({target.Where}). Activalo tu y yo peleo. Esperando jefe...");
                     }
                     else if (tick == 1 || tick % 600 == 0)
                     {
@@ -388,7 +401,7 @@ if (farm || hunt)
             }
 
             if (tick % 120 == 0)
-                Console.WriteLine($"[Farm t{tick}] {decision.State} | {decision.Reason} | vida {p.Life}/{p.MaxLife} | jefes:{s.ActiveBosses.Length} | dia={s.IsDay}");
+                Console.WriteLine($"[Farm t{tick}] {decision.State} | {decision.Reason} | vida {p.Life}/{p.MaxLife} | jefes:{s.ActiveBosses.Length} projs:{s.LiveProjectiles.Length} | dia={s.IsDay}");
             tick++;
             await Task.Delay(16);
         }

@@ -20,9 +20,11 @@ public sealed class ClrMdGameReader : IDisposable
     private static readonly string[] DownedFlags = new[]
     {
         "downedBoss1", "downedBoss2", "downedBoss3",
-        "downedQueenBee", "hardMode",
+        "downedQueenBee", "downedSlimeKing", "downedDeerclops", "hardMode",
+        "downedQueenSlime",
         "downedMechBoss1", "downedMechBoss2", "downedMechBoss3", "downedMechBossAny",
         "downedPlantBoss", "downedGolemBoss", "downedFishron",
+        "downedEmpress", "downedHallowBoss",
         "downedHalloweenKing", "downedHalloweenTree", "downedChristmasIceQueen",
         "downedChristmasSantank", "downedChristmasTree", "downedMartians",
         "downedAncientCultist", "downedLunatic", "downedMoonlord", "downedTowerSolar",
@@ -195,7 +197,7 @@ public sealed class ClrMdGameReader : IDisposable
                 WingTime: null, WingTimeMax: null, NumMinions: null, MaxMinions: null, ActiveSlot: null,
                 Hotbar: Array.Empty<ItemSlot>(), Inventory: Array.Empty<ItemSlot>(), Buffs: Array.Empty<int>(),
                 IsDay: null, WorldTime: null, WorldName: null, PlayerName: null,
-                Downed: downed, ActiveBosses: emptyBoss, Warnings: warnings);
+                Downed: downed, ActiveBosses: emptyBoss, LiveProjectiles: Array.Empty<ProjectileState>(), Warnings: warnings);
 
         try
         {
@@ -259,11 +261,12 @@ public sealed class ClrMdGameReader : IDisposable
             }
 
             var bosses = FBosses(main, warnings);
+            var projs = FProjectiles(main, warnings);
             double conf = total == 0 ? 0 : Math.Round((double)ok / total, 2);
             return new LiveSnapshot(true, "clrmd-live", conf, DateTime.Now,
                 life, maxLife, mana, maxMana, def, px, py, vx, vy, wing, wingMax,
                 numMin, maxMin, slot, hotbar, rest, buffs,
-                isDay, time, null, null, downed, bosses.ToArray(), warnings);
+                isDay, time, null, null, downed, bosses.ToArray(), projs.ToArray(), warnings);
         }
         catch (Exception ex)
         {
@@ -276,7 +279,7 @@ public sealed class ClrMdGameReader : IDisposable
         new(false, "clrmd-live", 0, DateTime.Now,
             null, null, null, null, null, null, null, null, null, null, null, null, null, null,
             Array.Empty<ItemSlot>(), Array.Empty<ItemSlot>(), Array.Empty<int>(),
-            null, null, null, null, d, Array.Empty<BossState>(), w);
+            null, null, null, null, d, Array.Empty<BossState>(), Array.Empty<ProjectileState>(), w);
 
     // ---- primitivas por nombre ----
     private int? FInt(ClrObject o, bool has, string f, List<string> w, ref int ok, ref int total)
@@ -438,6 +441,54 @@ public sealed class ClrMdGameReader : IDisposable
             }
         }
         catch (Exception ex) { w.Add("npc: " + ex.Message); }
+        return list;
+    }
+
+    // Proyectiles hostiles en vivo (Main.projectile[1000]): para esquivar dashes y tiros.
+    // Solo hostiles con dano>0, tope 100. Todo TryRead: si tu version cambia nombres, lista vacia.
+    private List<ProjectileState> FProjectiles(ClrType main, List<string> w)
+    {
+        var list = new List<ProjectileState>();
+        try
+        {
+            ClrObject ao;
+            try { ao = SObj(main, "projectile"); } catch (Exception ex) { w.Add("Main.projectile: " + ex.Message); return list; }
+            if (!ao.IsArray) return list;
+            var a = ao.AsArray();
+            for (int i = 0; i < Math.Min(1000, a.Length) && list.Count < 100; i++)
+            {
+                try
+                {
+                    var p = a.GetObjectValue(i);
+                    if (p.IsNull || !p.TryReadField("active", out bool act) || !act) continue;
+                    if (!p.TryReadField("hostile", out bool hos) || !hos) continue;
+                    p.TryReadField("type", out int type);
+                    p.TryReadField("damage", out int dmg);
+                    if (dmg <= 0) continue;
+                    float px = 0, py = 0, vx = 0, vy = 0;
+                    try
+                    {
+                        if (p.TryReadValueTypeField("position", out ClrValueType pp))
+                        { px = pp.ReadField<float>("X"); py = pp.ReadField<float>("Y"); }
+                    }
+                    catch { }
+                    try
+                    {
+                        if (p.TryReadValueTypeField("velocity", out ClrValueType vv))
+                        { vx = vv.ReadField<float>("X"); vy = vv.ReadField<float>("Y"); }
+                    }
+                    catch { }
+                    list.Add(new ProjectileState
+                    {
+                        Type = type, PositionX = px, PositionY = py,
+                        VelocityX = vx, VelocityY = vy, Damage = dmg,
+                        Hostile = true, Active = true,
+                    });
+                }
+                catch { }
+            }
+        }
+        catch (Exception ex) { w.Add("projectile: " + ex.Message); }
         return list;
     }
 

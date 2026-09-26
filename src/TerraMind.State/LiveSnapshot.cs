@@ -31,6 +31,8 @@ public sealed record LiveSnapshot(
     Dictionary<string, bool> Downed,
     // Jefes activos ahora
     BossState[] ActiveBosses,
+    // Proyectiles hostiles en vivo (para esquivar dashes y tiros)
+    ProjectileState[] LiveProjectiles,
     List<string> Warnings)
 {
     public GameStage GuessStage()
