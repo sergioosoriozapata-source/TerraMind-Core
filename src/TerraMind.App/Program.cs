@@ -263,6 +263,41 @@ LiveSnapshot FakeFarmTick(SimulatedWorld sim, int tick)
         new ItemSlot[] { new(0, 1, 1, "ThornWhipx1[LATIGO]"), new(3, 2, 1, "FlinxStaffx1[BACULO]") }, Array.Empty<ItemSlot>(), Array.Empty<int>(),
         true, 27000, "?", "?", new Dictionary<string, bool>(), boss ? new[] { new BossState { Type = 4, Name = "EyeofCthulhu", Life = 2000, MaxLife = 2800, Active = true } } : Array.Empty<BossState>(), projs, new List<string>());
 }
+LiveSnapshot FakeEmpressTick(SimulatedWorld sim, int tick)
+{
+    // Escenario guionizado FASE1->FASE2 diurna para probar cada patron de esquiva.
+    var st = sim.State;
+    float px = st.PositionX, py = st.PositionY;
+    bool p2 = tick >= 165;
+    var projs = new List<ProjectileState>();
+    float bx = px, by = py, bvx = 0, bvy = 0;
+    float ai0 = -1;
+    string win = tick switch
+    {
+        < 40 => "bolts", < 70 => "windup", < 85 => "dash",
+        < 125 => "ring", < 165 => "rainbow", _ => "waves",
+    };
+    if (!p2)
+    {
+        if (win == "bolts") for (int i = 0; i < 4; i++)
+            projs.Add(new ProjectileState { Type = 10 + i, PositionX = px + 200 + i * 30, PositionY = py - 100 + i * 50, VelocityX = -5, VelocityY = 1, Damage = 100, Hostile = true, Active = true });
+        if (win == "windup") { bx = px + 300; by = py; }
+        if (win == "dash") { bx = px + 150; by = py; bvx = -25; }
+        if (win == "ring") { ai0 = 4; for (int i = 0; i < 8; i++) { float a = i * MathF.PI / 4; projs.Add(new ProjectileState { Type = 20 + i, PositionX = px + MathF.Cos(a) * 350, PositionY = py + MathF.Sin(a) * 350, VelocityX = 0.5f, VelocityY = 0, Damage = 120, Hostile = true, Active = true }); } }
+        if (win == "rainbow") { bx = px + 200; by = py - 200; for (int i = 0; i < 10; i++) { float a = i * MathF.PI * 2 / 10; projs.Add(new ProjectileState { Type = 30 + i, PositionX = bx + MathF.Cos(a) * 280, PositionY = by + MathF.Sin(a) * 280, VelocityX = MathF.Cos(a + 1) * 2, VelocityY = MathF.Sin(a + 1) * 2, Damage = 100, Hostile = true, Active = true }); } }
+    }
+    else
+    {
+        ai0 = 7; bx = px - 400; by = py - 100;
+        for (int i = 0; i < 8; i++)
+            projs.Add(new ProjectileState { Type = 40 + i, PositionX = px - 500, PositionY = py - 300 + i * 80, VelocityX = 14, VelocityY = 0, Damage = 130, Hostile = true, Active = true });
+    }
+    var boss = new BossState { Type = 636, Name = "EmpressofLight", Life = p2 ? 30000 : 70000, MaxLife = 70000, PositionX = bx, PositionY = by, VelocityX = bvx, VelocityY = bvy, Ai = new[] { ai0, 0, 0, 0 }, Damage = 150, Active = true };
+    return new LiveSnapshot(false, "simulado", 0, DateTime.Now, 500, 500, 200, 200,
+        21, px, py, 0, 0, 180, 180, 3, 4, 0,
+        new ItemSlot[] { new(0, 1, 1, "ThornWhipx1[LATIGO]"), new(3, 2, 1, "StardustDragonStaffx1[BACULO]") }, Array.Empty<ItemSlot>(), Array.Empty<int>(),
+        true, 15000, "?", "?", new Dictionary<string, bool>(), tick > 230 ? Array.Empty<BossState>() : new[] { boss }, projs.ToArray(), new List<string>());
+}
 if (farm || hunt)
 {
     string progPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "TerraMind-Core", "progression.json");
@@ -325,12 +360,14 @@ if (farm || hunt)
 
     var deadline = DateTime.Now.AddMinutes(minutes);
     int tick = 0, lastUpkeep = 0;
+    var empressDodge = new EmpressDodge();
     var sim2 = provider.Simulation; sim2.Reset();
     try
     {
         while (DateTime.Now < deadline && !killed)
         {
-            LiveSnapshot s = isDry ? FakeFarmTick(sim2, tick) : clr2.Scan();
+            bool dryEmpress = isDry && hunt && huntName.Contains("Empress", StringComparison.OrdinalIgnoreCase);
+            LiveSnapshot s = isDry ? (dryEmpress ? FakeEmpressTick(sim2, tick) : FakeFarmTick(sim2, tick)) : clr2.Scan();
             bool potionSick = HasBuff(s, clr2, "PotionSickness");
             var p = new PlayerState
             {
@@ -343,6 +380,16 @@ if (farm || hunt)
             };
             var decision = brain.Tick(p, s.ActiveBosses, s.LiveProjectiles, profile);
             var act = GameAction.FromDecision(decision with { UseHealPotion = decision.UseHealPotion && !potionSick });
+
+            // Emperatriz: modulo dedicado (diurna = furia one-shot, esquiva total, sin armas).
+            var empress = s.ActiveBosses.FirstOrDefault(b => EmpressDodge.IsEmpress(b.Name));
+            EmpressDodgeDecision? ed = null;
+            if (empress is not null)
+            {
+                ed = empressDodge.Decide(p, empress, s.LiveProjectiles, s.IsDay ?? true);
+                bool healOk = !ed.Enraged && decision.State == BrainState.Curacion && !potionSick;
+                act = new GameAction(ed.MoveX, ed.Fly, ed.Fly, ed.Attack, healOk, false);
+            }
 
             if (!isDry)
             {
@@ -381,8 +428,9 @@ if (farm || hunt)
                         input.SelectSlot(weaponSlot);
                     }
                 }
-                if (isDry && tick == 30) bossSeen = true; // simulacro
-                if (bossSeen && s.ActiveBosses.Length == 0 && (isDry ? tick > 60 : true))
+                if (isDry && !dryEmpress && tick == 30) bossSeen = true; // simulacro generico
+                if (dryEmpress && tick == 10) bossSeen = true;
+                if (bossSeen && s.ActiveBosses.Length == 0 && (isDry ? (dryEmpress ? tick > 230 : tick > 60) : true))
                 {
                     var newFlags = s.Downed.Where(kv => kv.Value).Select(kv => kv.Key).Except(startDowned).ToList();
                     if (isDry || newFlags.Count > 0 || (s.Life ?? 1) > 0 && tick > 100)
@@ -392,16 +440,16 @@ if (farm || hunt)
                         {
                             killed = true;
                             beater2.ReportKill(target.Boss);
-                            File.WriteAllText(progPath, $"{{\"stage\":\"{beater2.Progress.Stage}\",\"boss\":\"{target.Boss}\",\"at\":\"{DateTime.Now:O}\"}}");
-                            Console.WriteLine($"[Hunt] KILL {target.Boss} -> etapa {beater2.Progress.Stage}. Guardado en progression.json");
+                            if (!isDry) File.WriteAllText(progPath, $"{{\"stage\":\"{beater2.Progress.Stage}\",\"boss\":\"{target.Boss}\",\"at\":\"{DateTime.Now:O}\"}}");
+                            Console.WriteLine($"[Hunt] KILL {target.Boss} -> etapa {beater2.Progress.Stage}.{(isDry ? " (dry: no guardado)" : " Guardado en progression.json")}");
                         }
                     }
                 }
                 if (!isDry && (s.Life ?? 1) <= 0 && !deadOnce) { deadOnce = true; Console.WriteLine("[Hunt] Mori. Reaparezco y sigo (jefe sigue con vida?)."); bossSeen = false; }
             }
 
-            if (tick % 120 == 0)
-                Console.WriteLine($"[Farm t{tick}] {decision.State} | {decision.Reason} | vida {p.Life}/{p.MaxLife} | jefes:{s.ActiveBosses.Length} projs:{s.LiveProjectiles.Length} | dia={s.IsDay}");
+            if (tick % (dryEmpress ? 20 : 120) == 0)
+                Console.WriteLine($"[Farm t{tick}] {(ed is null ? $"{decision.State} | {decision.Reason}" : $"EMPERATRIZ {ed.Pattern}{(ed.Enraged ? "/FURIA" : "")}{(ed.Phase2 ? "/P2" : "")} | {ed.Reason}")} | vida {p.Life}/{p.MaxLife} | jefes:{s.ActiveBosses.Length} projs:{s.LiveProjectiles.Length} | dia={s.IsDay}");
             tick++;
             await Task.Delay(16);
         }

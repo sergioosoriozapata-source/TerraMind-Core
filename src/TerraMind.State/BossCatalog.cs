@@ -39,7 +39,7 @@ public static class BossCatalog
         new BossSummon("Plantera", GameStage.Mech_Done, "Sin item: pica el bulbo en la jungla", "siempre", "jungla", 5, 500, 40),
         new BossSummon("Golem", GameStage.Plantera_Done, "Celula lizarhard (altar)", "siempre", "templo", 6, 500, 50),
         new BossSummon("DukeFishron", GameStage.Golem_Done, "Gusano trufa (pesca)", "siempre", "oceano", 5, 500, 50),
-        new BossSummon("EmpressOfLight", GameStage.Golem_Done, "Crisopa prismatica", "noche", "hallow", 5, 500, 55),
+        new BossSummon("EmpressOfLight", GameStage.Golem_Done, "Crisopa prismatica (liberala DE DIA = furiosa)", "dia", "hallow superficie", 5, 500, 55),
         new BossSummon("LunaticCultist", GameStage.Golem_Done, "Sin item: mata a los sectarios del dungeon", "siempre", "dungeon", 6, 500, 55),
         new BossSummon("MoonLord", GameStage.Lunatic_Done, "Senal celestial", "siempre", "superficie", 4, 500, 60),
     };
