@@ -247,6 +247,7 @@ public sealed class ClrMdGameReader : IDisposable
             var hotbar = FItems(player, hasPlayer, "inventory", 0, 10, warnings, ref ok, ref total);
             var rest = FItems(player, hasPlayer, "inventory", 10, 49, warnings, ref ok, ref total);
             var buffs = FInts(player, hasPlayer, "buffType", 22, warnings, ref ok, ref total);
+            var armor = FItems(player, hasPlayer, "armor", 0, 20, warnings, ref ok, ref total);
 
             var npcType = heap.GetTypeByName("Terraria.NPC");
             foreach (var flag in DownedFlags)
@@ -266,7 +267,7 @@ public sealed class ClrMdGameReader : IDisposable
             return new LiveSnapshot(true, "clrmd-live", conf, DateTime.Now,
                 life, maxLife, mana, maxMana, def, px, py, vx, vy, wing, wingMax,
                 numMin, maxMin, slot, hotbar, rest, buffs,
-                isDay, time, null, null, downed, bosses.ToArray(), projs.ToArray(), warnings);
+                isDay, time, null, null, downed, bosses.ToArray(), projs.ToArray(), warnings, armor);
         }
         catch (Exception ex)
         {

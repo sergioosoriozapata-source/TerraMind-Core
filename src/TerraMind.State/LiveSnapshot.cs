@@ -33,7 +33,9 @@ public sealed record LiveSnapshot(
     BossState[] ActiveBosses,
     // Proyectiles hostiles en vivo (para esquivar dashes y tiros)
     ProjectileState[] LiveProjectiles,
-    List<string> Warnings)
+    List<string> Warnings,
+    // Equipo puesto (armor[20]): armadura + accesorios. null = no leido
+    ItemSlot[]? Equipped = null)
 {
     public GameStage GuessStage()
     {

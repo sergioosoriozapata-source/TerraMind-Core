@@ -80,6 +80,15 @@ if (scan)
     Console.WriteLine($"Slots invocador: {string.Join(",", strat.SuggestedSummonSlots)} | Slots jefe: {string.Join(",", strat.SuggestedBossSlots)}");
     Console.WriteLine($"Farm: {string.Join(" / ", strat.FarmGoals)}");
     Console.WriteLine($"Crafteo: {string.Join(" / ", strat.CraftChecklist)}");
+    var gear = SummonerGearPlan.Build(snap, clr.BuffNames);
+    Console.WriteLine($"--- PLAN INVOCADOR PRE-HARDMODE ({gear.Pct}% | set {gear.ArmorSet}) ---");
+    foreach (var n in gear.Needs)
+        Console.WriteLine(n.Have is not null ? $"  [OK] {n.Slot}: {n.Have}" : $"  [..] {n.Slot}: FALTA {n.Missing} -> {n.FarmHint}{(n.Manual ? " [MANUAL]" : "")}");
+    if (gear.EquipNow.Length > 0) Console.WriteLine($"  EQUIPA YA (en mochila): {string.Join(" | ", gear.EquipNow)}");
+    var (ready, why) = SummonerGearPlan.WallReadiness(snap, gear);
+    Console.WriteLine($"  MURO: {(ready ? "LISTO" : "NO")} - {why}");
+    var eq = (snap.Equipped ?? Array.Empty<ItemSlot>()).Where(s => !s.IsEmpty).Take(12).ToArray();
+    if (eq.Length > 0) Console.WriteLine($"  puesto: {string.Join(" | ", eq.Select(s => s.Role))}");
     return;
 }
 
@@ -335,6 +344,9 @@ if (farm || hunt)
     };
     Console.WriteLine($"[Farm] clase={arche} ({strat0.Reason}) | etapa={strat0.Stage} | siguiente={strat0.NextGoal}");
     Console.WriteLine($"[Farm] {PhasePlan.Summary(snap0.Downed)}");
+    var gear0 = SummonerGearPlan.Build(snap0, clr2.BuffNames);
+    var (ready0, why0) = SummonerGearPlan.WallReadiness(snap0, gear0);
+    Console.WriteLine($"[Farm] gear invocador {gear0.Pct}% ({gear0.ArmorSet}) | MURO: {(ready0 ? "LISTO" : "NO")} - {why0}");
     int[] staffSlots = strat0.SuggestedSummonSlots.Select(s => s - 1).Where(s => s is >= 0 and <= 9).ToArray();
     int[] bossSlotsAuto = strat0.SuggestedBossSlots.Select(s => s - 1).Where(s => s is >= 0 and <= 9).ToArray();
     int weaponSlot = snap0.Hotbar.FirstOrDefault(s => s.Role.Contains("LATIGO")) is ItemSlot w1 && !w1.IsEmpty ? w1.Index
